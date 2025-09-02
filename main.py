@@ -100,6 +100,7 @@ def read_until_end_and_log(uart, log_file_path, msg, name):
 # --- Main Script ---
 
 if __name__ == '__main__':
+    PORT = None
     # File paths for logging
     bit_log_file = "bit.txt"
     atp_log_file = "atp.txt"
@@ -109,7 +110,7 @@ if __name__ == '__main__':
     open(atp_log_file, 'w').close()
 
     try:
-        with LogicWeave() as lw:
+        with LogicWeave(port=PORT) as lw:
             ch1 = lw.pd_channel(1)
             ch2 = lw.pd_channel(2)
             
