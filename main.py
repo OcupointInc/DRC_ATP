@@ -88,7 +88,7 @@ def read_until_end_and_log(uart, log_file_path, msg, name):
                         result_payload = full_buffer[result_start:result_start+4]
                         print(f"\nResult found: {result_payload}")
                         return
-                        
+                    
             except Exception as e:
                 if "Unexpected response" in str(e):
                     print(f"\nCaught expected error: {e}. Retrying read for {name} test...")
@@ -109,35 +109,42 @@ if __name__ == '__main__':
     open(bit_log_file, 'w').close()
     open(atp_log_file, 'w').close()
 
+    lw = None  # Initialize LogicWeave object to None
     try:
-        with LogicWeave(port=PORT) as lw:
-            ch1 = lw.pd_channel(1)
-            ch2 = lw.pd_channel(2)
-            
-            ch1.request_power(voltage_mv=15000, current_limit_ma=2500)
-            ch2.request_power(voltage_mv=5000, current_limit_ma=2000)
-            
-            lw.write_bank_voltage(bank=1, voltage=BankVoltage.V5P0)
-            lw.write_bank_voltage(bank=2, voltage=BankVoltage.V5P0)
-            lw.write_bank_voltage(bank=3, voltage=BankVoltage.V5P0)
-            ch1.enable_output(True)
-            ch2.enable_output(True)
+        lw = LogicWeave(port=PORT)
+        ch1 = lw.pd_channel(1)
+        ch2 = lw.pd_channel(2)
         
-            time.sleep(1)
+        ch1.request_power(voltage_mv=15000, current_limit_ma=2500)
+        ch2.request_power(voltage_mv=5000, current_limit_ma=2000)
         
-            uart = lw.uart(instance_num=0,tx_pin=32, rx_pin=33)
+        lw.write_bank_voltage(bank=1, voltage=BankVoltage.V5P0)
+        lw.write_bank_voltage(bank=2, voltage=BankVoltage.V5P0)
+        lw.write_bank_voltage(bank=3, voltage=BankVoltage.V5P0)
+        ch1.enable_output(True)
+        ch2.enable_output(True)
+    
+        time.sleep(1)
+        
+        uart = lw.uart(instance_num=0,tx_pin=32, rx_pin=33)
 
-            # Example of calling the new logging functions for a "BIT" test
-            #bypass_error_and_log(uart, bit_log_file, "1\n")
-            #read_until_end_and_log(uart, bit_log_file, "1\n", "BIT")
-            
-            # Example of calling the new logging functions for an "ATP" test
-            bypass_error_and_log(uart, atp_log_file, "3\n")
-            read_until_end_and_log(uart, atp_log_file, "3\n", "ATP")
-
-            ch1.enable_output(False)
-            ch2.enable_output(False)
+        # Example of calling the new logging functions for an "ATP" test
+        bypass_error_and_log(uart, atp_log_file, "3\n")
+        read_until_end_and_log(uart, atp_log_file, "3\n", "ATP")
 
     except Exception as e:
         print(f"An error occurred: {e}")
         print("Please ensure your LogicWeave device is connected and drivers are installed.")
+        
+    finally:
+        # This block will always execute.
+        # It's crucial for ensuring power off, even if an error occurs.
+        if lw is not None:
+            try:
+                print("Disabling power outputs before exit...")
+                ch1.enable_output(False)
+                ch2.enable_output(False)
+                lw.close() # Close the connection to the LogicWeave device
+                print("Power outputs disabled and LogicWeave connection closed.")
+            except Exception as e:
+                print(f"Failed to disable power outputs on exit: {e}")
