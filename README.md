@@ -29,6 +29,12 @@ Once all the hardware is connected, you can begin the test:
 2. Run the main Python script
 3. The test will take roughly 50 seconds to complete, and the logs will be streamed through the console, as well as written to a atp.txt file
 
+## Test Being Run
+
+1. Loopback on digital IO pins. The pins are tied in pairs, and one is set as an input and the other an output. It confirms it can read back high/low state of each IO line, then it swaps which one is the input vs output and repeats the test.
+2. Low speed DAC, high speed ADC loopback. Sets to 0V, 5V and 10V, then reads back the voltage on the high speed ADC.
+3. High speed DAC, high speed ADC loopback. Sets to 0V and 5V, then reads back the voltage on the high speed ADC.
+
 ## Troubleshooting
 
 1. If the hardware gives an error saying invalid PD request, swap the channel 1 and channel 2 power cables. Each port on the power brick only can supply certain voltages
